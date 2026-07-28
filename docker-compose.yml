@@ -18,8 +18,9 @@ services:
       - moneylog-net
 
   app:
+    # 로컬에서는 build로 즉석 빌드하고, EC2에서는 docker compose pull로 이 이미지를 받아온다
+    image: ghcr.io/donggeon0312/moneylog:latest
     build: ./backend
-    image: moneylog:latest
     container_name: moneylog-app
     depends_on:
       db:
