@@ -9,6 +9,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,29 +26,28 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    // TODO(1-8): userId를 @AuthenticationPrincipal 로그인 사용자로 교체
-    private static final Long TEMP_USER_ID = 1L;
-
     @GetMapping
-    public ApiResponse<List<CategoryResponse>> getList() {
-        return ApiResponse.success("카테고리 목록을 조회했습니다.", categoryService.getMyCategories(TEMP_USER_ID));
+    public ApiResponse<List<CategoryResponse>> getList(@AuthenticationPrincipal Long userId) {
+        return ApiResponse.success("카테고리 목록을 조회했습니다.", categoryService.getMyCategories(userId));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<CategoryResponse>> create(@Valid @RequestBody CategoryRequest req) {
-        CategoryResponse created = categoryService.create(TEMP_USER_ID, req);
+    public ResponseEntity<ApiResponse<CategoryResponse>> create(@AuthenticationPrincipal Long userId,
+            @Valid @RequestBody CategoryRequest req) {
+        CategoryResponse created = categoryService.create(userId, req);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("카테고리가 등록되었습니다.", created));
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<CategoryResponse> update(@PathVariable Long id, @Valid @RequestBody CategoryRequest req) {
-        return ApiResponse.success("카테고리가 수정되었습니다.", categoryService.update(TEMP_USER_ID, id, req));
+    public ApiResponse<CategoryResponse> update(@AuthenticationPrincipal Long userId,
+            @PathVariable Long id, @Valid @RequestBody CategoryRequest req) {
+        return ApiResponse.success("카테고리가 수정되었습니다.", categoryService.update(userId, id, req));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        categoryService.delete(TEMP_USER_ID, id);
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
+        categoryService.delete(userId, id);
         return ResponseEntity.noContent().build();
     }
 }

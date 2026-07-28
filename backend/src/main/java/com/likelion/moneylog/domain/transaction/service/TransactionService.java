@@ -1,6 +1,7 @@
 package com.likelion.moneylog.domain.transaction.service;
 
-import com.likelion.moneylog.common.exception.NotFoundException;
+import com.likelion.moneylog.common.exception.CustomException;
+import com.likelion.moneylog.common.exception.ErrorCode;
 import com.likelion.moneylog.domain.category.entity.Category;
 import com.likelion.moneylog.domain.category.repository.CategoryRepository;
 import com.likelion.moneylog.domain.transaction.dto.TransactionRequest;
@@ -78,17 +79,21 @@ public class TransactionService {
 
     private User getUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND", "사용자를 찾을 수 없습니다: " + userId));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
     private Category findOwnedCategory(User user, Long categoryId) {
         return categoryRepository.findByIdAndUser(categoryId, user)
-                .orElseThrow(() -> new NotFoundException("CATEGORY_NOT_FOUND", "존재하지 않는 카테고리입니다: " + categoryId));
+                .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
-    // 본인 소유 거래만 조회하는 공통 헬퍼 (인가의 핵심 — 1-8에서 그대로 재사용)
+    // 존재 여부(404)와 소유권(403)을 구분해서 응답한다 — 인가의 핵심
     private Transaction findOwnedTransaction(User user, Long id) {
-        return transactionRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new NotFoundException("TRANSACTION_NOT_FOUND", "거래내역을 찾을 수 없습니다: " + id));
+        Transaction tx = transactionRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND));
+        if (!tx.getUser().getId().equals(user.getId())) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+        return tx;
     }
 }

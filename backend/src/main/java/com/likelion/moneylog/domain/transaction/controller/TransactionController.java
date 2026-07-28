@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,38 +33,38 @@ public class TransactionController {
 
     private final TransactionService transactionService;
 
-    // TODO(1-8): userId를 @AuthenticationPrincipal 로그인 사용자로 교체
-    private static final Long TEMP_USER_ID = 1L;
-
     @PostMapping
-    public ResponseEntity<ApiResponse<TransactionResponse>> create(@Valid @RequestBody TransactionRequest req) {
-        TransactionResponse created = transactionService.create(TEMP_USER_ID, req);
+    public ResponseEntity<ApiResponse<TransactionResponse>> create(@AuthenticationPrincipal Long userId,
+            @Valid @RequestBody TransactionRequest req) {
+        TransactionResponse created = transactionService.create(userId, req);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("거래내역이 등록되었습니다.", created));
     }
 
     @GetMapping
     public ApiResponse<Map<String, List<TransactionResponse>>> getList(
+            @AuthenticationPrincipal Long userId,
             @RequestParam String yearMonth,
             @PageableDefault(size = 20, sort = "transactionDate", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<TransactionResponse> page = transactionService.getList(TEMP_USER_ID, yearMonth, pageable);
+        Page<TransactionResponse> page = transactionService.getList(userId, yearMonth, pageable);
         var data = Map.of("transactions", page.getContent());
         return ApiResponse.success("거래내역 목록을 조회했습니다.", data, PageMeta.from(page));
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<TransactionResponse> get(@PathVariable Long id) {
-        return ApiResponse.success("거래내역을 조회했습니다.", transactionService.get(TEMP_USER_ID, id));
+    public ApiResponse<TransactionResponse> get(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
+        return ApiResponse.success("거래내역을 조회했습니다.", transactionService.get(userId, id));
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<TransactionResponse> update(@PathVariable Long id, @Valid @RequestBody TransactionRequest req) {
-        return ApiResponse.success("거래내역이 수정되었습니다.", transactionService.update(TEMP_USER_ID, id, req));
+    public ApiResponse<TransactionResponse> update(@AuthenticationPrincipal Long userId,
+            @PathVariable Long id, @Valid @RequestBody TransactionRequest req) {
+        return ApiResponse.success("거래내역이 수정되었습니다.", transactionService.update(userId, id, req));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        transactionService.delete(TEMP_USER_ID, id);
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
+        transactionService.delete(userId, id);
         return ResponseEntity.noContent().build();
     }
 }

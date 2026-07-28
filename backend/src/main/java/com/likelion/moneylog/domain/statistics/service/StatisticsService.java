@@ -1,6 +1,7 @@
 package com.likelion.moneylog.domain.statistics.service;
 
-import com.likelion.moneylog.common.exception.NotFoundException;
+import com.likelion.moneylog.common.exception.CustomException;
+import com.likelion.moneylog.common.exception.ErrorCode;
 import com.likelion.moneylog.domain.category.entity.CategoryType;
 import com.likelion.moneylog.domain.statistics.dto.StatisticsResponse;
 import com.likelion.moneylog.domain.statistics.repository.StatisticsRepository;
@@ -22,7 +23,7 @@ public class StatisticsService {
     @Transactional(readOnly = true)
     public StatisticsResponse monthly(Long userId, String yearMonth) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND", "사용자를 찾을 수 없습니다: " + userId));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         YearMonth ym = YearMonth.parse(yearMonth);
         LocalDate start = ym.atDay(1);

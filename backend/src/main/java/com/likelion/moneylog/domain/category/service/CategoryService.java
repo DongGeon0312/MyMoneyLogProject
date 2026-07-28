@@ -1,6 +1,7 @@
 package com.likelion.moneylog.domain.category.service;
 
-import com.likelion.moneylog.common.exception.NotFoundException;
+import com.likelion.moneylog.common.exception.CustomException;
+import com.likelion.moneylog.common.exception.ErrorCode;
 import com.likelion.moneylog.domain.category.dto.CategoryRequest;
 import com.likelion.moneylog.domain.category.dto.CategoryResponse;
 import com.likelion.moneylog.domain.category.entity.Category;
@@ -68,12 +69,12 @@ public class CategoryService {
 
     private User getUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND", "사용자를 찾을 수 없습니다: " + userId));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
     private Category findOwned(Long userId, Long id) {
         User user = getUser(userId);
         return categoryRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new NotFoundException("CATEGORY_NOT_FOUND", "존재하지 않는 카테고리입니다: " + id));
+                .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 }
