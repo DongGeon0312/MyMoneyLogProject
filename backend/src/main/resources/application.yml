@@ -56,5 +56,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      # 이 캡스톤 규모에는 별도 마이그레이션 도구(Flyway 등)가 없어 update로 스키마를 자동 생성한다.
+      # 실무에서는 운영 DB에 validate/none + 마이그레이션 도구 사용을 권장한다.
+      ddl-auto: update
     show-sql: false
