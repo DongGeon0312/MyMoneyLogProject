@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>머니로그 - 거래내역</title>
+</head>
+<body>
+  <h1>거래내역</h1>
+  <a href="statistics.html">월별 통계 보기</a>
+  &nbsp;|&nbsp;
+  <a href="#" id="logoutLink">로그아웃</a>
+
+  <h2>새 거래 등록</h2>
+  <form id="txForm">
+    <select id="type">
+      <option value="EXPENSE">지출</option>
+      <option value="INCOME">수입</option>
+    </select>
+    <select id="categoryId" required></select>
+    <input type="number" id="amount" placeholder="금액(원)" min="1" required />
+    <input type="text" id="description" placeholder="내용" />
+    <input type="date" id="transactionDate" required />
+    <button type="submit">등록</button>
+  </form>
+  <p id="msg" style="color:red"></p>
+
+  <h2 id="listTitle">이번 달 목록</h2>
+  <p id="pageInfo"></p>
+  <table border="1">
+    <thead>
+      <tr><th>날짜</th><th>타입</th><th>카테고리</th><th>금액</th><th>내용</th></tr>
+    </thead>
+    <tbody id="txBody"></tbody>
+  </table>
+
+  <script src="api.js"></script>
+  <script>
+    requireLogin();
+    document.getElementById("logoutLink").addEventListener("click", (e) => { e.preventDefault(); logout(); });
+
+    const yearMonth = currentYearMonth();
+    document.getElementById("listTitle").textContent = `${yearMonth} 거래 목록`;
+
+    let categories = [];
+
+    async function loadCategories() {
+      const body = await apiFetch("/api/categories");
+      categories = body.data;
+      const select = document.getElementById("categoryId");
+      select.innerHTML = categories
+        .map((c) => `<option value="${c.id}">${c.name} (${c.type === "INCOME" ? "수입" : "지출"})</option>`)
+        .join("");
+    }
+
+    function categoryName(categoryId) {
+      const found = categories.find((c) => c.id === categoryId);
+      return found ? found.name : categoryId;
+    }
+
+    async function loadTransactions() {
+      const body = await apiFetch(`/api/transactions?yearMonth=${yearMonth}`);
+      const list = body.data.transactions;
+      const page = body.meta?.pagination;
+
+      const tbody = document.getElementById("txBody");
+      tbody.innerHTML = "";
+      list.forEach((t) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${t.transactionDate}</td>
+          <td>${t.type === "INCOME" ? "수입" : "지출"}</td>
+          <td>${t.categoryName}</td>
+          <td>${t.amount.toLocaleString()}원</td>
+          <td>${t.description ?? ""}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      if (page) {
+        document.getElementById("pageInfo").textContent =
+          `총 ${page.totalItems}건 · ${page.page + 1}/${Math.max(page.totalPages, 1)}쪽`;
+      }
+    }
+
+    document.getElementById("txForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const body = {
+        type: document.getElementById("type").value,
+        amount: Number(document.getElementById("amount").value),
+        categoryId: Number(document.getElementById("categoryId").value),
+        description: document.getElementById("description").value,
+        transactionDate: document.getElementById("transactionDate").value,
+      };
+      try {
+        await apiFetch("/api/transactions", {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+        e.target.reset();
+        await loadTransactions();
+      } catch (err) {
+        document.getElementById("msg").textContent = err.message;
+      }
+    });
+
+    (async () => {
+      await loadCategories();
+      await loadTransactions();
+    })();
+  </script>
+</body>
+</html>

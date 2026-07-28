@@ -21,13 +21,14 @@ public class SecurityConfig {
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final RestAccessDeniedHandler accessDeniedHandler;
 
-    // 인증 없이 접근 허용할 경로 (회원가입/로그인/Swagger/H2 콘솔-로컬 전용)
+    // 인증 없이 접근 허용할 경로 (회원가입/로그인/Swagger/H2 콘솔-로컬 전용/정적 프론트 화면)
     private static final String[] WHITELIST = {
             "/api/auth/signup",
             "/api/auth/login",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/h2-console/**"
+            "/h2-console/**",
+            "/", "/index.html", "/login.html", "/transactions.html", "/statistics.html", "/api.js"
     };
 
     @Bean

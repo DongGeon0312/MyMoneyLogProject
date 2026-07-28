@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>머니로그 - 월별 통계</title>
+</head>
+<body>
+  <h1>월별 통계</h1>
+  <a href="transactions.html">거래내역으로</a>
+
+  <ul>
+    <li>총수입: <b id="income">-</b>원</li>
+    <li>총지출: <b id="expense">-</b>원</li>
+    <li>잔액: <b id="balance">-</b>원</li>
+  </ul>
+
+  <h2>카테고리별 지출</h2>
+  <table border="1">
+    <thead><tr><th>카테고리</th><th>합계</th></tr></thead>
+    <tbody id="byCategory"></tbody>
+  </table>
+
+  <script src="api.js"></script>
+  <script>
+    requireLogin();
+    const yearMonth = currentYearMonth();
+
+    async function loadStatistics() {
+      const body = await apiFetch(`/api/statistics/monthly?yearMonth=${yearMonth}`);
+      const s = body.data;
+
+      document.getElementById("income").textContent = s.income.toLocaleString();
+      document.getElementById("expense").textContent = s.expense.toLocaleString();
+      document.getElementById("balance").textContent = s.balance.toLocaleString();
+
+      const tbody = document.getElementById("byCategory");
+      tbody.innerHTML = "";
+      s.byCategory.forEach((c) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${c.categoryName}</td><td>${c.total.toLocaleString()}원</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    loadStatistics();
+  </script>
+</body>
+</html>
