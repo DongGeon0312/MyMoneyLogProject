@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 // 로컬(H2)에서 엔티티/Repository 동작을 눈으로 확인하기 위한 임시 데이터 주입.
 // 2일차 CRUD 구현 후에는 실제 API로 대체하고 이 클래스는 삭제해도 된다.
@@ -26,7 +27,9 @@ public class DataInitializer implements CommandLineRunner {
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
 
+    // category는 LAZY 로딩이라, 세션이 열려 있는 트랜잭션 안에서 접근해야 한다.
     @Override
+    @Transactional
     public void run(String... args) {
         User user = userRepository.save(User.builder()
                 .email("test@moneylog.com")
